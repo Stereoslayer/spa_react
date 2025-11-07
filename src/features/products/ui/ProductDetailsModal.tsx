@@ -8,6 +8,7 @@ import {selectProductsState} from "../model/selectors";
 import {ProductFormValues} from "@/features/products/model/formSchema";
 import {updateProduct} from "@/features/products/model/slice";
 import ProductEditForm from "@/features/products/ui/ProductEditForm";
+import {notify} from "@/utils/notify";
 
 export default function ProductDetailsModal() {
     const {id} = useParams<{ id: string }>();
@@ -52,6 +53,7 @@ export default function ProductDetailsModal() {
             }
         }));
         setEditMode(false);
+        notify.ok("Изменения сохранены");
     };
 
 

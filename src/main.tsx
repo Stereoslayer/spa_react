@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { store, persistor } from "./app/store";
 import { AppRoutes } from "./app/router";
 import "./index.css";
+import {Toaster} from "react-hot-toast";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
@@ -16,5 +17,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 </BrowserRouter>
             </PersistGate>
         </Provider>
+        <Toaster position="top-right" />
     </React.StrictMode>
 );

@@ -8,6 +8,7 @@ import { selectLikedMap } from "../model/selectors";
 import { cn } from "@/utils/cn";
 import React, {useState} from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import {notify} from "@/utils/notify";
 
 type Props = { product: Product };
 
@@ -35,6 +36,7 @@ export default function ProductCard({ product }: Props) {
     const confirmDelete = () => {
         setConfirmOpen(false);
         dispatch(softDelete(product.id));
+        notify.ok("Карточка удалена");
     };
 
     const cancelDelete = () => setConfirmOpen(false);

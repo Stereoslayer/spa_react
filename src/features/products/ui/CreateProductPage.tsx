@@ -6,6 +6,7 @@ import { createProduct } from "../model/slice";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {ProductFormValues, productFormSchema} from "../model/formSchema";
+import {notify} from "@/utils/notify";
 
 export default function CreateProductPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -45,6 +46,7 @@ export default function CreateProductPage() {
             })
         );
         navigate("/products");
+        notify.ok("Продукт создан");
     };
 
     return (

@@ -1,6 +1,6 @@
-import {AppDispatch, RootState} from "@/app/store";
+import {createAsyncThunk} from "@reduxjs/toolkit";
+import type {RootState} from "@/app/store";
 import {fetchProductById, fetchProducts} from "./productsApi";
-import {upsertMany, setTotal, setStatus, setError} from "./slice";
 import type {Product} from "./types";
 
 function mapDummyToProduct(p: any): Product {
@@ -14,35 +14,48 @@ function mapDummyToProduct(p: any): Product {
     };
 }
 
-export const loadProducts =
-    () => async (dispatch: AppDispatch, getState: () => RootState) => {
+export const loadProducts = createAsyncThunk<
+    { items: Product[]; total: number },
+    void,
+    { state: RootState; rejectValue: string }
+>(
+    "products/loadProducts",
+    async (_: void, {getState, signal, rejectWithValue}) => {
         try {
-            dispatch(setStatus("loading"));
             const {page, perPage} = getState().products;
             const skip = (page - 1) * perPage;
 
-            const data = await fetchProducts({limit: perPage, skip});
-            const mapped = data.products.map(mapDummyToProduct);
-            dispatch(upsertMany(mapped));
-            dispatch(setTotal(data.total));
-            dispatch(setStatus("succeeded"));
-            dispatch(setError(null));
-        } catch (e: any) {
-            dispatch(setStatus("failed"));
-            dispatch(setError(e?.message ?? "Unknown error"));
-        }
-    };
+            const resp = await fetchProducts({limit: perPage, skip, signal});
+            const items = resp.products.map(mapDummyToProduct) as Product[];
+            const total = Number(resp.total) || items.length;
 
-export const loadProductById =
-    (id: number | string) => async (dispatch: AppDispatch) => {
-        try {
-            dispatch(setStatus("loading"));
-            const p = await fetchProductById(id);
-            dispatch(upsertMany([mapDummyToProduct(p)]));
-            dispatch(setStatus("succeeded"));
-            dispatch(setError(null));
+            return {items, total};
         } catch (e: any) {
-            dispatch(setStatus("failed"));
-            dispatch(setError(e?.message ?? "Unknown error"));
+            if (e?.name === "AbortError") throw e;
+            return rejectWithValue(e?.message ?? "Не удалось загрузить продукты");
         }
-    };
+    }
+);
+
+export const loadProductById = createAsyncThunk<
+    Product,
+    string | number,
+    { state: RootState; rejectValue: string }
+>(
+    "products/loadProductById",
+    async (id, {signal, rejectWithValue}) => {
+        try {
+            const resp = await fetchProductById(id, signal);
+            return mapDummyToProduct(resp);
+        } catch (e: any) {
+            if (e?.name === "AbortError") throw e;
+            return rejectWithValue(e?.message ?? "Не удалось загрузить продукт");
+        }
+    },
+    {
+        condition: (id, {getState}) => {
+            const st = (getState() as RootState).products;
+            return !st.entities[id as any];
+        },
+    }
+);

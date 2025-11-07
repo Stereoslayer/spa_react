@@ -1,6 +1,7 @@
-import { createSlice, createEntityAdapter, nanoid } from "@reduxjs/toolkit";
-import type { PayloadAction } from "@reduxjs/toolkit";
-import type { Product } from "./types";
+import {createSlice, createEntityAdapter, nanoid} from "@reduxjs/toolkit";
+import type {PayloadAction} from "@reduxjs/toolkit";
+import type {Product} from "./types";
+import {loadProductById, loadProducts} from "@/features/products/model/thunks";
 
 const adapter = createEntityAdapter<Product>();
 
@@ -61,7 +62,7 @@ const slice = createSlice({
         },
         createProduct(state, action: PayloadAction<Omit<Product, "id">>) {
             const id = nanoid();
-            const product: Product = { id, ...action.payload };
+            const product: Product = {id, ...action.payload};
             state.createdLocal[id] = product;
             adapter.addOne(state, product);
             state.total += 1;
@@ -70,10 +71,10 @@ const slice = createSlice({
             state,
             action: PayloadAction<{ id: Product["id"]; patch: Partial<Product> }>
         ) {
-            const { id, patch } = action.payload;
+            const {id, patch} = action.payload;
             if (!state.entities[id]) return;
-            state.editedLocal[id] = { ...(state.editedLocal[id] ?? {}), ...patch };
-            adapter.updateOne(state, { id, changes: patch });
+            state.editedLocal[id] = {...(state.editedLocal[id] ?? {}), ...patch};
+            adapter.updateOne(state, {id, changes: patch});
         },
         upsertMany(state, action: PayloadAction<Product[]>) {
             adapter.upsertMany(state, action.payload);
@@ -87,6 +88,37 @@ const slice = createSlice({
         setError(state, action: PayloadAction<string | null>) {
             state.error = action.payload;
         },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(loadProducts.pending, (st) => {
+                st.status = "loading";
+                st.error = null;
+            })
+            .addCase(loadProducts.fulfilled, (st, {payload}) => {
+                st.status = "succeeded";
+                st.error = null;
+                adapter.upsertMany(st, payload.items);
+                st.total = payload.total;
+            })
+            .addCase(loadProducts.rejected, (st, action) => {
+                st.status = "failed";
+                st.error = String(action.payload ?? action.error.message ?? "Ошибка загрузки");
+            })
+
+            .addCase(loadProductById.pending, (st) => {
+                st.status = "loading";
+                st.error = null;
+            })
+            .addCase(loadProductById.fulfilled, (st, {payload}) => {
+                st.status = "succeeded";
+                st.error = null;
+                adapter.upsertOne(st, payload)
+            })
+            .addCase(loadProductById.rejected, (st, action) => {
+                st.status = "failed";
+                st.error = String(action.payload ?? action.error.message ?? "Ошибка загрузки");
+            });
     },
 });
 
