@@ -1,13 +1,13 @@
 import {DummyListResponse, DummyProduct} from "@/features/products/model/types";
 
-const BASE = "https://dummyjson.com";
+const BASE = "https://dummyjson.com/";
 
 export async function fetchProducts(params?: {
     limit?: number;
     skip?: number;
     signal?: AbortSignal;
 }) {
-    const url = new URL(`${BASE}/products`);
+    const url = new URL("products", BASE);
     if (params?.limit != null) url.searchParams.set("limit", String(params.limit));
     if (params?.skip != null) url.searchParams.set("skip", String(params.skip));
 
@@ -20,7 +20,8 @@ export async function fetchProducts(params?: {
 }
 
 export async function fetchProductById(id: number | string, signal?: AbortSignal) {
-    const res = await fetch(`${BASE}/products/${id}`, { signal });
+    const url = new URL(`products/${id}`, BASE);
+    const res = await fetch(url.toString(), { signal });
     if (!res.ok) throw new Error(`Product ${id} not found`);
     return (await res.json()) as DummyProduct;
 }
