@@ -8,11 +8,13 @@ import { AppRoutes } from "./app/router";
 import "./index.css";
 import {Toaster} from "react-hot-toast";
 
+const BASENAME = "/spa_react";
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
-                <BrowserRouter basename="/spa_react">
+                <BrowserRouter basename={BASENAME}>
                     <AppRoutes />
                 </BrowserRouter>
             </PersistGate>

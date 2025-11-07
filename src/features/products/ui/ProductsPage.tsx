@@ -1,20 +1,20 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { loadProducts } from "../model/thunks";
+import {useEffect} from "react";
+import {useDispatch, useSelector} from "react-redux";
+import {loadProducts} from "../model/thunks";
 import {
     selectList,
     selectStatus,
     selectError,
     selectProductsState,
-    selectVisibleCount,
+    selectVisibleCount, selectTotalForPaging,
 } from "../model/selectors";
-import type { AppDispatch } from "@/app/store";
+import type {AppDispatch} from "@/app/store";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton";
-import { Link } from "react-router-dom";
+import {Link} from "react-router-dom";
 import ProductsToolbar from "./ProductsToolbar";
 import ProductsPagination from "@/features/products/ui/ProductsPagination";
-import { setPage } from "@/features/products/model/slice";
+import {setPage} from "@/features/products/model/slice";
 import toast from "react-hot-toast";
 
 export default function ProductsPage() {
@@ -23,8 +23,14 @@ export default function ProductsPage() {
     const products = useSelector(selectList);
     const status = useSelector(selectStatus);
     const error = useSelector(selectError);
-    const { page, perPage } = useSelector(selectProductsState);
+    const {page, perPage} = useSelector(selectProductsState);
     const visibleCount = useSelector(selectVisibleCount);
+    const totalForPaging = useSelector(selectTotalForPaging);
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil((totalForPaging || 0) / perPage));
+        if (page > totalPages) dispatch(setPage(totalPages));
+    }, [totalForPaging, perPage, page, dispatch]);
 
 
     useEffect(() => {
@@ -57,7 +63,7 @@ export default function ProductsPage() {
                 </Link>
             </div>
 
-            <ProductsToolbar />
+            <ProductsToolbar/>
 
             {isFailed && (
                 <div className="flex items-center gap-3 text-red-700 bg-red-50 border border-red-200 rounded p-3">
@@ -73,15 +79,15 @@ export default function ProductsPage() {
 
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {isLoading
-                    ? Array.from({ length: perPage }).map((_, i) => (
-                        <ProductCardSkeleton key={`sk-${i}`} />
+                    ? Array.from({length: perPage}).map((_, i) => (
+                        <ProductCardSkeleton key={`sk-${i}`}/>
                     ))
-                    : products.map((p) => <ProductCard key={p.id} product={p} />)}
+                    : products.map((p) => <ProductCard key={p.id} product={p}/>)}
             </div>
 
             {isEmpty && <div className="text-gray-600">Ничего не найдено.</div>}
 
-            <ProductsPagination />
+            <ProductsPagination/>
         </div>
     );
 }
